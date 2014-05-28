@@ -1,0 +1,45 @@
+<!--
+
+    Copyright 2014 AnjLab
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
+<configuration scan="true" scanPeriod="30 seconds">
+
+  <property file="src/test/resources/hipchat.properties" />
+
+  <appender name="HipChat" class="com.anjlab.logback.hipchat.HipChatRoomAppender">
+    <layout>
+      <pattern>%d{HH:mm:ss.SSS} %X{req.sessionId} [%thread] %7X{req.requestId} %-5level %logger{36} - %msg%n</pattern>
+    </layout>
+    <room>${room}</room>
+    <apiKey>${apiKey}</apiKey>
+    <color>yellow</color>
+    <notify>false</notify>
+  </appender>
+
+  <appender name="AsyncHipChat" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="HipChat" />
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+  </appender>
+  
+  <root level="DEBUG">
+    <appender-ref ref="AsyncHipChat" />
+  </root>
+
+</configuration>

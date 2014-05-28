@@ -1,0 +1,130 @@
+apply plugin: 'java'
+apply plugin: 'eclipse'
+
+group = 'com.anjlab'
+version = '1.0.0'
+description = 'Logback HipChat Appender'
+
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url 'http://jcenter.bintray.com' }
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3'
+        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.7.0'
+    }
+}
+
+configure(allprojects) {
+    apply plugin: 'license'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'org.apache.httpcomponents:httpclient:4.3.1'
+    compile 'org.slf4j:slf4j-api:1.7.7'
+    compile 'ch.qos.logback:logback-core:1.1.2'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
+    compile 'commons-io:commons-io:2.4'
+    compile 'com.google.code.gson:gson:2.2.4'
+    
+    runtime 'org.slf4j:jcl-over-slf4j:1.7.5'
+    runtime 'org.slf4j:log4j-over-slf4j:1.7.5'
+    
+    testCompile 'junit:junit:4.10'
+}
+
+configurations {
+    all*.exclude group: 'org.slf4j', module: 'slf4j-log4j12'
+    all*.exclude group: 'org.slf4j', module: 'slf4j-simple'
+    all*.exclude group: 'log4j', module: 'log4j'
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
+}
+
+apply plugin: 'bintray'
+
+bintray {
+    user = "$bintray_user"
+    key = "$bintray_api_key"
+    publications = ['mavenJava']
+    pkg {
+        repo = 'maven'
+        userOrg = 'anjlab' // an optional organization name when the repo belongs to one of the user's orgs
+        licenses = ['Apache-2.0']
+    }
+    dryRun = false // whether to run this as dry-run, without deploying
+}
+
+bintray.pkg.name = name
+bintray.pkg.desc = description
+bintray.pkg.labels = []
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    classifier = 'javadoc'
+}
+
+jar.dependsOn sourcesJar
+jar.dependsOn javadocJar
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+def pomFragments = {
+    licenses {
+        license {
+            name "The Apache Software License, Version 2.0"
+            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            distribution "repo"
+        }
+    }
+    developers {
+        developer {
+            id "dmitrygusev"
+            name "Dmitry Gusev"
+            email "dmitry@anjlab.com"
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            
+            pom.withXml {
+                def root = asNode()
+                
+                def deps = root.children().find {
+                    it.name().localPart == 'dependencies'
+                }
+                
+                root.children().remove(deps)
+                
+                root.appendNode('description', project.description)
+                root.children().last() + pomFragments
+                
+                def pom = new XmlParser().parse(project.file("build/poms/pom-default.xml"))
+                
+                pom.dependencies.each {
+                    root.append(it)
+                }
+            }
+        }
+    }
+}
