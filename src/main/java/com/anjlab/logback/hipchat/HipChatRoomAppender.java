@@ -15,6 +15,8 @@
  */
 package com.anjlab.logback.hipchat;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.commons.io.IOUtils;
 
 import ch.qos.logback.core.AppenderBase;
@@ -67,14 +69,14 @@ public class HipChatRoomAppender<E> extends AppenderBase<E>
         IOUtils.closeQuietly(hipChatRoom);
     }
     
-    private int eventId;
+    private final AtomicLong eventCounter = new AtomicLong();
     
     @Override
     protected void append(E eventObject)
     {
-        String rawMessage = layout.doLayout(eventObject);
+        final long eventId = eventCounter.incrementAndGet();
         
-        eventId++;
+        String rawMessage = layout.doLayout(eventObject);
         
         int maxWrapperLength = 100;
         
