@@ -2,7 +2,7 @@ apply plugin: 'java'
 apply plugin: 'eclipse'
 
 group = 'com.anjlab'
-version = '1.0.0'
+version = '1.0.1'
 description = 'Logback HipChat Appender'
 
 buildscript {
@@ -11,8 +11,8 @@ buildscript {
         maven { url 'http://jcenter.bintray.com' }
     }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.3'
-        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.7.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:0.5'
+        classpath 'nl.javadude.gradle.plugins:license-gradle-plugin:0.11.0'
     }
 }
 
@@ -47,7 +47,7 @@ configurations {
     all*.exclude group: 'commons-logging', module: 'commons-logging'
 }
 
-apply plugin: 'bintray'
+apply plugin: 'com.jfrog.bintray'
 
 bintray {
     user = "$bintray_user"
@@ -84,13 +84,6 @@ artifacts {
 }
 
 def pomFragments = {
-    licenses {
-        license {
-            name "The Apache Software License, Version 2.0"
-            url "http://www.apache.org/licenses/LICENSE-2.0.txt"
-            distribution "repo"
-        }
-    }
     developers {
         developer {
             id "dmitrygusev"
@@ -117,6 +110,12 @@ publishing {
                 root.children().remove(deps)
                 
                 root.appendNode('description', project.description)
+
+                def license = root.appendNode('licenses').appendNode('license')
+                license.appendNode("name", "The Apache Software License, Version 2.0")
+                license.appendNode("url", "http://www.apache.org/licenses/LICENSE-2.0.txt")
+                license.appendNode("distribution", "repo")
+
                 root.children().last() + pomFragments
                 
                 def pom = new XmlParser().parse(project.file("build/poms/pom-default.xml"))
