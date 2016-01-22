@@ -33,6 +33,7 @@ public class HipChatRoomAppender<E> extends AppenderBase<E>
     private String apiKey;
     private Color color = Color.red;
     private boolean notify = true;
+    private boolean printChunkHeader = true;
     
     private HipChatRoom hipChatRoom;
     
@@ -92,21 +93,25 @@ public class HipChatRoomAppender<E> extends AppenderBase<E>
                 chunkId++;
                 
                 //  Wrap chunk with HTML (see maxWrapperLength above)
-                StringBuilder htmlMessage = new StringBuilder(maxChunkSize)
-                    .append("<b>")
-                    .append(eventId)
-                    .append(':')
-                    .append(hasMoreChunks
-                                ? chunkId
-                                : chunkId == 1
+                StringBuilder htmlMessage = new StringBuilder(maxChunkSize);
+                if (printChunkHeader) {
+                    htmlMessage
+                            .append("<b>")
+                            .append(eventId)
+                            .append(':')
+                            .append(hasMoreChunks
+                                    ? chunkId
+                                    : chunkId == 1
                                     ? "single"
                                     : chunkId)
-                    .append(hasMoreChunks
-                                ? "+more"
-                                : chunkId > 1
+                            .append(hasMoreChunks
+                                    ? "+more"
+                                    : chunkId > 1
                                     ? "-last"
                                     : "")
-                    .append("</b>")
+                            .append("</b>");
+                }
+                htmlMessage
                     .append("<pre>")
                     .append(chunk)
                     .append("</pre>");
@@ -140,5 +145,9 @@ public class HipChatRoomAppender<E> extends AppenderBase<E>
     public void setNotify(boolean notify)
     {
         this.notify = notify;
+    }
+    public void setPrintChunkHeader(boolean printChunkHeader)
+    {
+        this.printChunkHeader = printChunkHeader;
     }
 }
